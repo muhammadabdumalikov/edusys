@@ -2,7 +2,7 @@ export default async (Sequelize, sequelize) => {
     return await sequelize.define('users', {
         id: {
             type: Sequelize.DataTypes.UUID,
-            pimaryKey: true,
+            primaryKey: true,
             defaultValue: Sequelize.DataTypes.UUIDV4
         }, 
         name: {
@@ -34,7 +34,8 @@ export default async (Sequelize, sequelize) => {
         },
         gender: {
             type: Sequelize.DataTypes.ENUM,
-            values: ["male", "female"]
+            values: ["male", "female"],
+            allowNull: false
         }
     })
 }
