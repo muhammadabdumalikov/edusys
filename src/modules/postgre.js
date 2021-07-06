@@ -4,9 +4,7 @@ import config from '../config.js'
 let {PG_CONNECTION_STRING} = config
 import UserModel from "../models/UserModel.js";
 
-const sequelize = new Sequelize("postgres://postgres:4324@localhost:5432/edusys", {
-    logging: false
-})
+const sequelize = new Sequelize("postgres://postgres:4324@localhost:5432/edusys",)
 
 async function postgres () {
 
@@ -15,9 +13,10 @@ async function postgres () {
         let db  = {}
         db.users = await UserModel(Sequelize, sequelize)
 
-        return db
+        await sequelize.sync({force: false})
 
-        // await sequelize.sync({force: true})
+
+        return db
         
     } catch (error) {
         console.log("DB ERROR ", error)

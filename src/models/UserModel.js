@@ -17,16 +17,14 @@ export default async (Sequelize, sequelize) => {
         phone: {
             type: Sequelize.DataTypes.STRING(13),
             is: /^9989[012345789][0-9]{7}$/,
-            allowNull: false
-        },
-        password: {
-            type: Sequelize.DataTypes.STRING(64), 
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         role: {
             type: Sequelize.DataTypes.ENUM,
             values: ["superadmin", "admin", "teacher", "student", "moderator"],
-            allowNull: false
+            allowNull: false,
+            defaultValue: "student"
         },
         bdate: {
             type: Sequelize.DataTypes.DATE,

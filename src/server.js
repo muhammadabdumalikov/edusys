@@ -5,8 +5,8 @@ import path from "path"
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan';
-
 import postgres from './modules/postgre.js'
+import routes from './routes/routes.js'
 
 async function main () {
     let db = await postgres()
@@ -20,13 +20,17 @@ async function main () {
     app.use(helmet())
     app.use(cors())
     app.use(morgan('dev'))
+    app.use(express.json())
+    app.use(express.urlencoded({extended: true}))
     app.use(async (req, res, next)=>{
         req.postgres = await db
         next()
     })
+
+    routes(app)
     
 }
-
+ 
 main()
 
 
