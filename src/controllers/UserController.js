@@ -1,92 +1,98 @@
-import phoneValidation from "../validations/phoneValidation.js"
-import signupValidation from "../validations/signupValidation.js"
-import randomNumber from 'random-number'
+import phoneValidation from "../validations/phoneValidation.js";
+import signupValidation from "../validations/signupValidation.js";
+import randomNumber from "random-number";
+import sendSMS from "../modules/sms.js";
 class UserController {
-    static async checkPhone (req, res) {
+    static async checkPhone(req, res) {
         try {
-            const data = await phoneValidation.validateAsync(req.body)
+            const data = await phoneValidation.validateAsync(req.body);
             let user = await req.postgres.users.findOne({
                 where: {
-                    phone: data.phone
-                }
-            })
+                    phone: data.phone,
+                },
+            });
             res.status(200).json({
                 ok: true,
-                exist: user ? true: false
-            })
-            console.log(user)
+                exist: user ? true : false,
+            });
+            console.log(user);
         } catch (error) {
             res.status(400).json({
                 ok: false,
-                message: error + ""
-            })
+                message: error + "",
+            });
         }
-
     }
 
-    static async signUp (req, res) {
+    static async signUp(req, res) {
         try {
-             const { name, bdate, gender, phone } = await signupValidation.validateAsync(req.body)
-             const user = await req.postgres.users.create({
-                 name: name,
-                 bdate: bdate,
-                 gender: gender == 1 ? "female" : "male", 
-                 phone: phone
-             })
-             res.status(201).json({
+            const { name, bdate, gender, phone } =
+                await signupValidation.validateAsync(req.body);
+            const user = await req.postgres.users.create({
+                name: name,
+                bdate: bdate,
+                gender: gender == 1 ? "female" : "male",
+                phone: phone,
+            });
+            res.status(201).json({
                 ok: true,
                 message: "Successfully registered",
-                data: user.dataValues
-             })
+                data: user.dataValues,
+            });
         } catch (error) {
-
-            if(error == "SequelizeUniqueConstraintError: Validation error"){
-                error = "User already exist"
+            if (error == "SequelizeUniqueConstraintError: Validation error") {
+                error = "User already exist";
             }
 
             res.status(400).json({
                 ok: false,
-                message: error + ""
-            })
+                message: error + "",
+            });
         }
     }
 
-    static async login (req, res) {
+    static async login(req, res) {
         try {
-            const data = await phoneValidation.validateAsync(req.body)
+            const data = await phoneValidation.validateAsync(req.body);
             const user = await req.postgres.users.findOne({
                 where: {
-                    phone: data.phone
-                }
-                
-            })
-    
-            if(!user) throw new Error("User not found")
+                    phone: data.phone,
+                },
+            });
+
+            if (!user) throw new Error("User not found");
 
             let gen = randomNumber.generator({
-                min:  100000, 
-                max:  999999,
-                integer: true
-              }) 
-            
-              let attempts = await req.postgres.attempts.create({
-                  user_id: user.dataValues.id,
-                  code: gen()
-              })
-              console.log(await attempts)
+                min: 100000,
+                max: 999999,
+                integer: true,
+            });
+
+            let x = await req.postgres.attempts.destroy({
+                where: {
+                    user_id: user.user_id
+                }
+            })
+            console.log(x)
+            let attempts = await req.postgres.attempts.create({
+                user_id: user.dataValues.id,
+                code: gen(),
+            });
+
+            // await sendSMS(data.phone, `Your code ${attempts.dataValues.code}`);
 
             res.status(200).json({
                 ok: true,
                 message: "Message sent",
-                id: attempts.dataValues.id
-            })
+                id: attempts.dataValues.id,
+            });
         } catch (error) {
             res.status(401).json({
                 ok: false,
-                message: error + ""
-            })
+                message: error + "",
+            });
         }
     }
 }
 
-export default UserController
+export default UserController;
