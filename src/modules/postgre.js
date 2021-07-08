@@ -5,7 +5,9 @@ let {PG_CONNECTION_STRING} = config
 import UserModel from "../models/UserModel.js";
 import AttemptsModel from "../models/AttemptsModel.js";
 
-const sequelize = new Sequelize("postgres://postgres:4324@localhost:5432/edusys",)
+const sequelize = new Sequelize("postgres://postgres:4324@localhost:5432/edusys", {
+    logging: false
+})
 
 async function postgres () {
 

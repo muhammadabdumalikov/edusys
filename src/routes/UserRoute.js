@@ -9,6 +9,8 @@ router.post('/signup', UserController.signUp)
 
 router.post('/login', UserController.login)
 
+router.post('/validate-code', UserController.validateCode)
+
 
 export default {
     path: '/user',

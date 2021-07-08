@@ -2,6 +2,7 @@ import phoneValidation from "../validations/phoneValidation.js";
 import signupValidation from "../validations/signupValidation.js";
 import randomNumber from "random-number";
 import sendSMS from "../modules/sms.js";
+import codeValidation from "../validations/codeValidation.js";
 class UserController {
     static async checkPhone(req, res) {
         try {
@@ -70,7 +71,7 @@ class UserController {
 
             let x = await req.postgres.attempts.destroy({
                 where: {
-                    user_id: user.user_id
+                    user_id: user.dataValues.id
                 }
             })
             console.log(x)
@@ -78,6 +79,7 @@ class UserController {
                 user_id: user.dataValues.id,
                 code: gen(),
             });
+            console.log(attempts.dataValues.code)
 
             // await sendSMS(data.phone, `Your code ${attempts.dataValues.code}`);
 
@@ -86,6 +88,56 @@ class UserController {
                 message: "Message sent",
                 id: attempts.dataValues.id,
             });
+        } catch (error) {
+            res.status(401).json({
+                ok: false,
+                message: error + "",
+            });
+        }
+    }
+
+    static async validateCode (req, res) {
+        try {
+            const validationId = await req.headers['codevalidationid']
+
+            if(!validationId) throw new Error('Invalid validation token')
+            const attempt = await req.postgres.attempts.findOne({
+                where: {
+                    id: validationId
+                }
+            })
+            
+            const { code } = await codeValidation.validateAsync(req.body)
+
+            if(!attempt){
+                throw new Error('Validation code is not found')
+            }
+
+            if(code !== Number(attempt.dataValues.code)){
+                await req.postgres.attempts.update({
+                    attempts: attempt.dataValues.attempts +1
+                },{
+                    where: {
+                        id: validationId
+                    }
+                })
+                
+                if(attempt.dataValues.attempts >= 3){
+                    await req.postgres.attempts.destroy({
+                        where: {
+                            id: validationId
+                        }
+                    })
+                }
+
+                throw new Error('Validation code is incorrect')
+            }   
+
+            const att = await req.postgres.attempts.findAll()
+            console.log(code, attempt.dataValues.code)
+            console.log(att)
+
+            
         } catch (error) {
             res.status(401).json({
                 ok: false,
